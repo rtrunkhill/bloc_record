@@ -14,7 +14,7 @@ module BlocRecord
             case value
             when String
                 "'#{value}'"
-                when Numeric
+            when Numeric
                 value.to_s
             else
                 "null"
