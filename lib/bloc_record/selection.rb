@@ -2,6 +2,8 @@ require 'sqlite3'
 
 module Selection
     def find(*ids)
+        raise ArgumentError.new("all id's must be integers") unless ids.all? {|i| i.is_a?(Integer) }
+        ids.map! {|i| i.abs }
         
         if ids.length == 1
             find_one(ids.first)
@@ -16,6 +18,9 @@ module Selection
     end
    
     def find_one(id)
+        raise ArgumentError.new("id must be an integer") unless id.is_a?(Integer)
+        id.abs!
+        
         row = connection.get_first_row <<-SQL
             SELECT #{columns.join ","} FROM #{table}
             WHERE id = #{id};
@@ -25,6 +30,9 @@ module Selection
     end
     
     def find_by(attribute, value)
+        # raise ArgumentError.new("attribute must be a string") unless attribute.is_a?(String)
+        # raise ArgumentError.new("value must be a string or integer") unless value.is_a?(String) || unless value.is_a?(Integer)
+            
         rows = connection.execute <<-SQL
             SELECT #{columns.join ","} FROM #{table}
             WHERE #{attribute} = #{BlocRecord::Utility.sql_strings(value)};
@@ -33,7 +41,39 @@ module Selection
         rows_to_array(rows)
     end
     
+    def method_missing(m, *args, &block)
+        m = m.split('_')
+        if m[0] = "find" && m[1] = "by"  && Schema.columns.include?(m[2])
+            find_by(m[2], *args[1])
+        else
+            puts "There is no #{m} method"
+        end
+    end
+    
+    
+    def find_each(search = {})
+        rows = connection.execute <<-SQL
+            SELECT #{columns.join ","} FROM #{table}
+            WHERE #{search} LIMIT #{:batch_size};
+        SQL
+        
+        yield(rows_to_arrays(rows))
+    end
+    
+    def find_in_batches(search = {})
+        rows = connection.execute <<-SQL
+            SELECT #{columns.join ","} FROM #{table}
+            WHERE #{search} 
+            OFFSET #{:start} LIMIT #{:batch_size};
+        SQL
+        
+        yield(rows_to_arrays(rows))
+    end
+   
     def take(num=1)
+        raise ArgumentError.new("num must be an integer") unless num.is_a?(Integer)
+        num.abs!
+        
         if num > 1
             rows = connection.execute <<-SQL
                 SELECT #{columns.join ","} FROM #{table}
