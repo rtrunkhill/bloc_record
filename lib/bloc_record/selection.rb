@@ -42,29 +42,34 @@ module Selection
     end
     
     def method_missing(m, *args, &block)
-        m = m.split('_')
-        if m[0] = "find" && m[1] = "by"  && Schema.columns.include?(m[2])
-            find_by(m[2], *args[1])
+        if m.include?("find_by")
+            i = m.indexOf("y_")
+            m = m[i+2]
+            find_by(m, args[0])
         else
-            puts "There is no #{m} method"
+            raise NameError.new("There is no such method")
         end
     end
     
     
     def find_each(search = {})
+        start = search[:start]
+        batch_size = search[:batch_size]
         rows = connection.execute <<-SQL
             SELECT #{columns.join ","} FROM #{table}
-            WHERE #{search} LIMIT #{:batch_size};
+            WHERE id >= #{start} LIMIT #{batch_size};
         SQL
         
         yield(rows_to_arrays(rows))
     end
     
     def find_in_batches(search = {})
+        start = search[:start]
+        batch_size = search[:batch_size]
         rows = connection.execute <<-SQL
             SELECT #{columns.join ","} FROM #{table}
-            WHERE #{search} 
-            OFFSET #{:start} LIMIT #{:batch_size};
+            ORDER BY id WHERE search 
+            OFFSET #{start} LIMIT #{batch_size};
         SQL
         
         yield(rows_to_arrays(rows))
