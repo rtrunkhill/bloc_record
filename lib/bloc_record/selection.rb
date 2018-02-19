@@ -42,18 +42,20 @@ module Selection
     end
     
     def method_missing(m, *args, &block)
+        m = m.to_s
         if m.include?("find_by")
-            i = m.indexOf("y_")
-            m = m[i+2]
+            i = m.index("y_")
+            m = m[i+2..-1].to_sym
+            puts "#{m}"
             find_by(m, args[0])
         else
-            raise NameError.new("There is no such method")
+            raise ArgumentError.new("There is no such method")
         end
     end
     
     
     def find_each(search = {})
-        start = search[:start]
+        start = search[:start] 
         batch_size = search[:batch_size]
         rows = connection.execute <<-SQL
             SELECT #{columns.join ","} FROM #{table}
