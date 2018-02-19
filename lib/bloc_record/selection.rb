@@ -106,9 +106,25 @@ module Selection
         rows_to_array(rows)
     end 
     
+    # activerecord order arg
+#   def order(*args)
+#       check_if_method_has_arguments!(:order, args)
+#       spawn.order!(*args)
+#   end
+    
     def order(*args)
         if args.count > 1
-            order = args.join(",")
+            case args.first
+            when String
+                order = args.join(",")
+            when Symbol
+                expression_hash = BlocRecord::Utility.convert_keys(args.last)
+                expression = expression_hash.map {|key, value| "#{key} #{BlocRecord::Utility.sql_strings(value)}"}
+                order = "#{args.first.to_s}, #{expression}"
+            when Hash
+                expression_hash = BlocRecord::Utility.convert_keys(args.first)
+                order = expression_hash.map {|key, value| "#{key} #{BlocRecord::Utility.sql_strings(value)}"}.join(",")
+            end
         else
             order = args.first.to_s
         end
