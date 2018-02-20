@@ -45,9 +45,8 @@ module Selection
         m = m.to_s
         if m.include?("find_by")
             i = m.index("y_")
-            m = m[i+2..-1].to_sym
-            puts "#{m}"
-            find_by(m, args[0])
+            m = m[i+2..-1].to_s
+            find_by(:m, args[0])
         else
             raise ArgumentError.new("There is no such method")
         end
@@ -55,14 +54,23 @@ module Selection
     
     
     def find_each(search = {})
-        start = search[:start] 
-        batch_size = search[:batch_size]
-        rows = connection.execute <<-SQL
-            SELECT #{columns.join ","} FROM #{table}
-            WHERE id >= #{start} LIMIT #{batch_size};
-        SQL
-        
-        yield(rows_to_arrays(rows))
+        if search[:start] && search[:batch_size]
+            start = search[:start] 
+            batch_size = search[:batch_size]
+            rows = connection.execute <<-SQL
+                SELECT #{columns.join ","} FROM #{table} ORDER BY id
+                WHERE id >= #{start} LIMIT #{batch_size};
+            SQL
+            rows_to_arrays(rows)
+        else
+            rows = connection.execute <<-SQL
+                SELECT #{columns.join ","} FROM #{table};
+            SQL
+            rows_to_array(rows)
+        end
+        rows.each do |row|
+          row.yield
+        end
     end
     
     def find_in_batches(search = {})
