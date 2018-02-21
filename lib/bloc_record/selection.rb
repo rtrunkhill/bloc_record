@@ -106,11 +106,12 @@ module Selection
         rows_to_array(rows)
     end 
     
-    # activerecord order arg
 #   def order(*args)
-#       check_if_method_has_arguments!(:order, args)
-#       spawn.order!(*args)
-#   end
+#      if args.count > 1
+#       order = args.join(",")
+#      else
+#       order = args.first.to_s
+#      end
     
     def order(*args)
         if args.count > 1
