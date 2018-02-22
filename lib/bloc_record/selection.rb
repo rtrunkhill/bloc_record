@@ -118,22 +118,27 @@ module Selection
             case args.first
             when String
                 order = args.join(",")
+                puts "args = #{args}"
             when Symbol
                 expression_hash = BlocRecord::Utility.convert_keys(args.last)
                 expression = expression_hash.map {|key, value| "#{key} #{BlocRecord::Utility.sql_strings(value)}"}
                 order = "#{args.first.to_s}, #{expression}"
+                puts "args = #{args}"
             when Hash
                 expression_hash = BlocRecord::Utility.convert_keys(args.first)
                 order = expression_hash.map {|key, value| "#{key} #{BlocRecord::Utility.sql_strings(value)}"}.join(",")
+                 puts "args = #{args}"
             end
         else
             order = args.first.to_s
+            puts "order = #{order}"
         end
        
         rows = connection.execute <<-SQL
             SELECT * FROM #{table}
             ORDER BY #{order};
         SQL
+
         rows_to_array(rows)
     end
     
