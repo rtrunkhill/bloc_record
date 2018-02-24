@@ -29,9 +29,9 @@
         true
     end
 
-   def update_attribute(attribute, value)
+    def update_attribute(attribute, value)
         self.class.update(self.id, { attribute => value })
-   end
+    end
    
     def update_attributes(updates)
         self.class.update(self.id, updates)
@@ -79,7 +79,5 @@
     def update_all(updates)
         update(nil, updates)
     end
-   
-   
    end
  end
