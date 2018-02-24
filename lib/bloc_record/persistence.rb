@@ -79,5 +79,16 @@
     def update_all(updates)
         update(nil, updates)
     end
+    
+    def method_missing(m, *args, &block)
+        m = m.to_s
+        if m.include?("update")
+            i = m.index("e_")
+            m = m[i+2..-1].to_s
+            update(:m, args[0])
+        else
+            raise ArgumentError.new("There is no such method")
+        end
+    end
    end
  end
