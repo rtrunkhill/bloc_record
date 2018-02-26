@@ -54,8 +54,22 @@
      end
      
     def update(ids, updates)
+        if ids.is_a?(Array) && updates.is_a?(Array)
+            for i in 0..updates.count - 1 do
+                update_once(ids[i], updates[i])
+            end
+        else
+            update_once(ids, updates)
+        end
+        true
+    end
+     
+    def update_once(ids, updates)
+        # puts "ids = #{ids.class}"
+        # puts "updates = #{updates.class}"
         updates = BlocRecord::Utility.convert_keys(updates)
         updates.delete "id"
+        # puts " new updates = #{updates}"
         updates_array = updates.map { |key, value| "#{key}=#{BlocRecord::Utility.sql_strings(value)}" }
         
         if ids.class == Fixnum
