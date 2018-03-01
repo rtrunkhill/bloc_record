@@ -18,21 +18,43 @@ module Associations
             
             collection
         end
-        
-        def belongs_to(association)
-            define_method(association) do
-                association_name = association.to_s
-                row = self.class.connection.get_first_row <<-SQL
-                    SELECT * FROM #{association_name}
-                    WHERE id = #{self.send(association_name + "_id")}
-                SQL
-                
-                class_name = association_name.classify.constantize
-                
-                if row
-                    data = Hash[class_name.columns.zip(row)]
-                    class_name.new(data)
-                end
+    end 
+    
+    #Support has_one associations in BlocRecord.
+    def has_one(association)
+        define_method(association) do
+            #probably just get rid of hthe singularize, becaue it's already singular
+            row = self.class.connection.get_first_row  <<-SQL
+                SELECT * FROM #{association.to_s} 
+                WHERE #{self.class.table}_id = #{self.id}
+            SQL
+            
+            class_name = association.to_s.classify.constantize
+            #dont need a collection because its only once
+            
+            #because no collection, probably just return class_name.new(Hash[class_name.columns.zip(row)]
+            class_name = association_name.classify.constantize
+            
+            if row
+                data = Hash[class_name.columns.zip(row)]
+                class_name.new(data)
+            end
+        end
+    end 
+    
+    def belongs_to(association)
+        define_method(association) do
+            association_name = association.to_s
+            row = self.class.connection.get_first_row <<-SQL
+                SELECT * FROM #{association_name}
+                WHERE id = #{self.send(association_name + "_id")}
+            SQL
+            
+            class_name = association_name.classify.constantize
+            
+            if row
+                data = Hash[class_name.columns.zip(row)]
+                class_name.new(data)
             end
         end
     end
